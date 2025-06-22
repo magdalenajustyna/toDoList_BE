@@ -1,0 +1,25 @@
+{
+  "name": "todolist-backend",
+  "version": "1.0.0",
+  "description": "Backend Repo für Webtech SoSe 25 Semesteraufgabe",
+  "homepage": "https://github.com/nadjastauber/toDoList-Backend#readme",
+  "bugs": {
+    "url": "https://github.com/nadjastauber/toDoList-Backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nadjastauber/toDoList-Backend.git"
+  },
+  "license": "ISC",
+  "author": "N. Stauber",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.0"
+  }
+}
