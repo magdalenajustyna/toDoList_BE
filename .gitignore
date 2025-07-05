@@ -407,3 +407,6 @@ FodyWeavers.xsd
 
 # Ignore .env file
 .env
+
+# System files
+.DS_Store

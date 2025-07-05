@@ -2,11 +2,14 @@ const express = require('express');
 const routes = require('./routes');
 const mongoose = require('mongoose');
 require('dotenv').config();
+const cors = require('cors');
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+// enable cors for all requests
+app.use(cors());
 app.use('/', routes);
 
 // connect to mongoDB
