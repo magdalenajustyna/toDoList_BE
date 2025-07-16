@@ -47,9 +47,9 @@ router.patch('/todos/:id', async(req, res) => {
     try {
         const todo = await Todo.findOne({ _id: req.params.id })
 
-        //if (req.body.status) {       //ACHTUNG: Status wird nur über den RadioButton geändert
-           // todo.status = req.body.status
-        //}
+        if (req.body.status) {       //ACHTUNG: Status wird nur über den RadioButton geändert
+           todo.status = req.body.status
+        }
 
         if (req.body.todoName) {
             todo.todoName = req.body.todoName       
