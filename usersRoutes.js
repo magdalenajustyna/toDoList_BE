@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const User = require('./models/users');
+const bcrypt = require('bcrypt');
+var jwt = require('jsonwebtoken');
 
 // get all users funtkioniert
 router.get('/', async(req, res) => {
@@ -9,15 +11,60 @@ router.get('/', async(req, res) => {
     res.send(allUsers);
 });
 
-// post one user funktioniert
-router.post('/', async(req, res) => {
-    
-    const newUser = new User({          // Werte aus request Objekt auslesen
-        email: req.body.email,
-        passwort: req.body.passwort,
-    })
-    await newUser.save();
-    res.send(newUser);
+// post one user - login 
+router.post('/login', async(req, res) => {
+
+    let email = req.body.email
+    let passwort = req.body.passwort
+
+    let user = await User.findOne({ email: email });
+
+    if (user){
+        const match = await bcrypt.compare(passwort, user.passwort);
+        if (match) {
+            const userWithoutPasswort = { id : user.id , email : user.email } ;
+           const token = jwt.sign(userWithoutPasswort, email); 
+            res.status(200).send({ message: "Login successful" });
+            res.send({token : token, user : userWithoutPasswort});
+            
+
+        } else {
+            res.status(401).send({ message: "Invalid email/password" });
+        }
+    }
+
+});
+
+// post one user - register 
+router.post('/register', async(req, res) => {
+
+    let emailVar = req.body.email
+    let passwortVar = req.body.passwort
+    let hashPasswort = await bcrypt.hash(passwortVar, 10);
+    console.log('hash : ', hashPasswort)
+
+    //prüfe, ob mail schon existiert    
+
+    let user = await User.findOne({ email: emailVar });
+
+    if (user){      // wenn ja, dann Fehler zurückgeben
+
+        res.status(401).send({ message: "email already exists!" });           
+
+        } 
+        
+        else {      // wenn nein, dann neuen User anlegen
+
+            const newUser = new User({
+
+                email: emailVar,
+                passwort: hashPasswort
+            })
+
+            await newUser.save();
+            res.status(201).send(newUser);
+    }
+
 });
 
 // get one User via id 
