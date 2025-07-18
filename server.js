@@ -1,5 +1,6 @@
 const express = require('express');
 const routes = require('./routes');
+const usersRoutes = require('./usersRoutes');
 const mongoose = require('mongoose');
 require('dotenv').config();
 const cors = require('cors');
@@ -10,7 +11,8 @@ const PORT = 3000;
 app.use(express.json());
 // enable cors for all requests
 app.use(cors());
-app.use('/', routes);
+app.use('/todos/todo', routes); // routes für todos /todos/user  -- /todos/todo
+app.use('/todos/user', usersRoutes); //noch user routes!!
 
 // connect to mongoDB
 mongoose.connect(process.env.DB_CONNECTION, { dbName: process.env.DATABASE });

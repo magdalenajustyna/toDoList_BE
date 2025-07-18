@@ -3,14 +3,14 @@ const router = express.Router();
 const Todo = require('./models/todos');
 
 // get all todos        funtkioniert
-router.get('/todos', async(req, res) => {
+router.get('/', async(req, res) => {
     const allTodos = await Todo.find();
     console.log(allTodos);
     res.send(allTodos);
 });
 
 // post one todo funktioniert
-router.post('/todos', async(req, res) => {
+router.post('/', async(req, res) => {
     
     const newTodo = new Todo({          // Werte aus request Objekt auslesen
         status: req.body.status,
@@ -24,7 +24,7 @@ router.post('/todos', async(req, res) => {
 
 // get one todo via id funktioniert
 // :name des Parameters (hat Bedeutung), wird wieder aus request Objekt ausgelesen
-router.get('/todos/:id', async(req, res) => {        
+router.get('/:id', async(req, res) => {        
     let id = req.params.id; // id aus der URL holen (Parameter so bennen wie auch tatsächlich gesucht wird)
     
     // find gibt Array 
@@ -43,7 +43,7 @@ router.get('/todos/:id', async(req, res) => {
 })
 
 // update one todo // nicht zwingend vollständiges Objekt übergeben, sondern auch nur einzelne Attribute //funktioniert
-router.patch('/todos/:id', async(req, res) => {
+router.patch('/:id', async(req, res) => {
     try {
         const todo = await Todo.findOne({ _id: req.params.id })
 
@@ -72,7 +72,7 @@ router.patch('/todos/:id', async(req, res) => {
 });
 
 // delete one to do via id funktioniert 
-router.delete('/todos/:id', async(req, res) => {
+router.delete('/:id', async(req, res) => {
     
     try {
         await Todo.deleteOne({ _id: req.params.id })
