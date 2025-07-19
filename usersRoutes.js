@@ -23,7 +23,7 @@ router.post('/login', async(req, res) => {
         const match = await bcrypt.compare(passwort, user.passwort);
         if (match) {
             const userWithoutPasswort = { id : user.id , email : user.email } ;
-           const token = jwt.sign(userWithoutPasswort, email); 
+            const token = jwt.sign(userWithoutPasswort, email); 
             res.status(200).send({ message: "Login successful" });
             res.send({token : token, user : userWithoutPasswort});
             
