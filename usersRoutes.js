@@ -24,7 +24,7 @@ router.post('/login', async(req, res) => {
         if (match) {
             const userWithoutPasswort = { id : user.id , email : user.email } ;
             const token = jwt.sign(userWithoutPasswort, email); 
-            res.status(200).send({ message: "Login successful" });
+            res.status(200)
             res.send({token : token, user : userWithoutPasswort});
             
 
