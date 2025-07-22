@@ -40,6 +40,7 @@ router.post('/register', async(req, res) => {
 
     let emailVar = req.body.email
     let passwortVar = req.body.passwort
+    let nameVar = req.body.name
     let hashPasswort = await bcrypt.hash(passwortVar, 10);
     console.log('hash : ', hashPasswort)
 
@@ -58,7 +59,8 @@ router.post('/register', async(req, res) => {
             const newUser = new User({
 
                 email: emailVar,
-                passwort: hashPasswort
+                passwort: hashPasswort,
+                name: nameVar
             })
 
             await newUser.save();
@@ -98,6 +100,10 @@ router.patch('/:id', async(req, res) => {
 
         if (req.body.passwort) {
             user.passwort = req.body.passwort       
+        }
+
+        if (req.body.name) {
+            user.name = req.body.name       
         }
 
         await User.updateOne({ _id: req.params.id }, user);
