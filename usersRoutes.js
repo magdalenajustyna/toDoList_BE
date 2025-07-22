@@ -16,13 +16,14 @@ router.post('/login', async(req, res) => {
 
     let email = req.body.email
     let passwort = req.body.passwort
+    
 
     let user = await User.findOne({ email: email });
 
     if (user){
         const match = await bcrypt.compare(passwort, user.passwort);
         if (match) {
-            const userWithoutPasswort = { id : user.id , email : user.email } ;
+            const userWithoutPasswort = { id : user.id , email : user.email, name : user.name } ;
             const token = jwt.sign(userWithoutPasswort, email); 
             res.status(200)
             res.send({token : token, user : userWithoutPasswort});
