@@ -2,33 +2,33 @@ const express = require('express');
 const router = express.Router();
 const Todo = require('./models/todos');
 
-// get all todos        funtkioniert
+// get all todos        
 router.get('/', async(req, res) => {
     const allTodos = await Todo.find();
     console.log(allTodos);
     res.send(allTodos);
 });
 
-// post one todo funktioniert
+// post one todo 
 router.post('/', async(req, res) => {
     
     const newTodo = new Todo({          // Werte aus request Objekt auslesen
         status: req.body.status,
         todoName: req.body.todoName,
         prio: req.body.prio,
-        datum: req.body.datum
+        datum: req.body.datum,
+        user_id: req.body.user_id
     })
     await newTodo.save();
     res.send(newTodo);
 });
 
-// get one todo via id funktioniert
+// get one todo via id 
 // :name des Parameters (hat Bedeutung), wird wieder aus request Objekt ausgelesen
 router.get('/:id', async(req, res) => {        
     let id = req.params.id; // id aus der URL holen (Parameter so bennen wie auch tatsächlich gesucht wird)
     
-    // find gibt Array 
-    //findOne gibt null zurück 
+       //findOne gibt null zurück (vs. find gibt Array)
     let todo = await Todo.findOne({ _id : req.params.id}); // Objekte in der Datenbank suchen, die mit der id übereinstimmen
    
     if(todo) {
@@ -42,7 +42,7 @@ router.get('/:id', async(req, res) => {
     }
 })
 
-// update one todo // nicht zwingend vollständiges Objekt übergeben, sondern auch nur einzelne Attribute //funktioniert
+// update one todo // nicht zwingend vollständiges Objekt übergeben, sondern auch nur einzelne Attribute
 router.patch('/:id', async(req, res) => {
     try {
         const todo = await Todo.findOne({ _id: req.params.id })
@@ -71,7 +71,7 @@ router.patch('/:id', async(req, res) => {
     }
 });
 
-// delete one to do via id funktioniert 
+// delete one todo via id  
 router.delete('/:id', async(req, res) => {
     
     try {

@@ -4,7 +4,7 @@ const User = require('./models/users');
 const bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 
-// get all users funtkioniert
+// get all users 
 router.get('/', async(req, res) => {
     const allUsers = await User.find();
     console.log(allUsers);
@@ -15,8 +15,7 @@ router.get('/', async(req, res) => {
 router.post('/login', async(req, res) => {
 
     let email = req.body.email
-    let passwort = req.body.passwort
-    
+    let passwort = req.body.passwort   
 
     let user = await User.findOne({ email: email });
 
@@ -26,8 +25,7 @@ router.post('/login', async(req, res) => {
             const userWithoutPasswort = { id : user.id , email : user.email, name : user.name } ;
             const token = jwt.sign(userWithoutPasswort, email); 
             res.status(200)
-            res.send({token : token, user : userWithoutPasswort});
-            
+            res.send({token : token, user : userWithoutPasswort});            
 
         } else {
             res.status(401).send({ message: "Invalid email/password" });
@@ -46,7 +44,6 @@ router.post('/register', async(req, res) => {
     console.log('hash : ', hashPasswort)
 
     //prüfe, ob mail schon existiert    
-
     let user = await User.findOne({ email: emailVar });
 
     if (user){      // wenn ja, dann Fehler zurückgeben

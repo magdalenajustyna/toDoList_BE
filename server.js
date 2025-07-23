@@ -11,8 +11,8 @@ const PORT = 3000;
 app.use(express.json());
 // enable cors for all requests
 app.use(cors());
-app.use('/todos/todo', routes); // routes für todos /todos/user  -- /todos/todo
-app.use('/todos/user', usersRoutes); //noch user routes!!
+app.use('/todos/todo', routes); 
+app.use('/todos/user', usersRoutes); 
 
 // connect to mongoDB
 mongoose.connect(process.env.DB_CONNECTION, { dbName: process.env.DATABASE });
