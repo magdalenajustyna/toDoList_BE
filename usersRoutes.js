@@ -22,7 +22,7 @@ router.post('/login', async(req, res) => {
     if (user){
         const match = await bcrypt.compare(passwort, user.passwort);
         if (match) {
-            const userWithoutPasswort = { id : user.id , email : user.email, name : user.name } ;
+            const userWithoutPasswort = { _id : user._id , email : user.email, name : user.name } ;
             const token = jwt.sign(userWithoutPasswort, email); 
             res.status(200)
             res.send({token : token, user : userWithoutPasswort});            
