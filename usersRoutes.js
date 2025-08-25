@@ -111,6 +111,33 @@ router.get('/:id/todos', async(req, res) => {
     }
 })
 
+// get one todo je userin
+router.get('/:userId/todos/:todoId', async(req, res) => {        
+    let userId = req.params.userId; // id aus der URL holen (Parameter so bennen wie auch tatsächlich gesucht wird)
+    let todoId = req.params.todoId; // id aus der URL holen (Parameter so bennen wie auch tatsächlich gesucht wird)
+    
+    // find gibt Array 
+    //findOne gibt null zurück 
+
+    //durchsuche todo-Datenbank nach User id
+    //zeige alle ToDos an 
+    let userTodo = await Todo.findOne({ user_id : userId, _id: todoId }) ;  // Objekte in der Datenbank suchen, die mit der id übereinstimmen
+   
+    if(userTodo) {      // wenn Array befüllt ist, dann alle ToDos zurückgeben
+        res.send(userTodo);        
+    } 
+    else {
+        res.status(404);
+        res.send({
+            error: "Todo does not exist!"
+        });
+    }
+})
+
+
+
+
+
 // update one user // nicht zwingend vollständiges Objekt übergeben, sondern auch nur einzelne Attribute //funktioniert
 router.patch('/:id', async(req, res) => {
     try {
