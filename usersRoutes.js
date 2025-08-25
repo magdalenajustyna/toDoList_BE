@@ -4,6 +4,8 @@ const User = require('./models/users');
 const bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 
+const Todo = require('./models/todos');
+
 // get all users 
 router.get('/', async(req, res) => {
     const allUsers = await User.find();
@@ -83,6 +85,28 @@ router.get('/:id', async(req, res) => {
         res.status(404);
         res.send({
             error: "User does not exist!"
+        });
+    }
+})
+
+// get all todos for one user
+router.get('/:id/todos', async(req, res) => {        
+    let id = req.params.id; // id aus der URL holen (Parameter so bennen wie auch tatsächlich gesucht wird)
+    
+    // find gibt Array 
+    //findOne gibt null zurück 
+
+    //durchsuche todo-Datenbank nach User id
+    //zeige alle ToDos an 
+    let userTodos = await Todo.find({ user_id : req.params.id}) ;  // Objekte in der Datenbank suchen, die mit der id übereinstimmen
+   
+    if(userTodos.length > 0) {      // wenn Array befüllt ist, dann alle ToDos zurückgeben
+        res.send(userTodos);        
+    } 
+    else {
+        res.status(404);
+        res.send({
+            error: "Todos do not exist!"
         });
     }
 })
