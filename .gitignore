@@ -288,6 +288,7 @@ FakesAssemblies/
 
 # Node.js Tools for Visual Studio
 .ntvs_analysis.dat
+/node_modules
 node_modules/
 
 # Visual Studio 6 build log
@@ -410,3 +411,6 @@ FodyWeavers.xsd
 
 # System files
 .DS_Store
+
+# package-lock.json
+package-lock.json
