@@ -9,18 +9,22 @@ router.get('/', async(req, res) => {
     res.send(allTodos);
 });
 
-// post one todo 
+// post one todo
 router.post('/', async(req, res) => {
-    
-    const newTodo = new Todo({          // Werte aus request Objekt auslesen
-        status: req.body.status,
-        todoName: req.body.todoName,
-        prio: req.body.prio,
-        datum: req.body.datum,
-        user_id: req.body.user_id
-    })
-    await newTodo.save();
-    res.send(newTodo);
+    try {
+        const newTodo = new Todo({          // Werte aus request Objekt auslesen
+            status: req.body.status,
+            todoName: req.body.todoName,
+            prio: req.body.prio,
+            datum: req.body.datum,
+            user_id: req.body.user_id
+        })
+        await newTodo.save();
+        res.send(newTodo);
+    } catch (err) {
+        console.log(err);
+        res.status(400).send({ error: "Todo could not be created!" });
+    }
 });
 
 // get one todo via id 
