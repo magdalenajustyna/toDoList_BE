@@ -16,7 +16,9 @@ const PORT = getPort();
 
 app.use(express.json());
 // enable cors for all requests
-app.use(cors());
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000'
+}));
 app.use('/todos/todo', routes);
 app.use('/todos/user', usersRoutes);
 

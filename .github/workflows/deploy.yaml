@@ -54,4 +54,5 @@ jobs:
             --project="${{ env.GCP_PROJECT_ID }}" \
             --port=8080 \
             --set-env-vars DB_CONNECTION="${{ secrets.DB_CONNECTION }}" \
-            --set-env-vars DATABASE="${{ secrets.DATABASE }}"
+            --set-env-vars DATABASE="${{ secrets.DATABASE }}" \
+            --set-env-vars FRONTEND_URL="${{ secrets.FRONTEND_URL }}"
