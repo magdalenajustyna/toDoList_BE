@@ -6,13 +6,21 @@ require('dotenv').config();
 const cors = require('cors');
 
 const app = express();
-const PORT = 3000;
+
+function getPort() {
+    const port = Number(process.env.PORT) || 8080;
+    return port;
+}
+
+const PORT = getPort();
 
 app.use(express.json());
 // enable cors for all requests
-app.use(cors());
-app.use('/todos/todo', routes); 
-app.use('/todos/user', usersRoutes); 
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000'
+}));
+app.use('/todos/todo', routes);
+app.use('/todos/user', usersRoutes);
 
 // connect to mongoDB
 mongoose.connect(process.env.DB_CONNECTION, { dbName: process.env.DATABASE });
@@ -24,10 +32,12 @@ db.once('open', () => {
     console.log('connected to DB');
 });
 
-app.listen(PORT, (error) => {
+app.listen(PORT, '0.0.0.0', (error) => {
     if (error) {
         console.log(error);
     } else {
         console.log(`Server started and listening on port ${PORT} ... `);
     }
 });
+
+module.exports = { getPort };
