@@ -87,7 +87,7 @@ router.get('/:id', async(req, res) => {
             error: "User does not exist!"
         });
     }
-})
+});
 
 // get all todos for one user
 router.get('/:id/todos', async(req, res) => {        
@@ -104,12 +104,10 @@ router.get('/:id/todos', async(req, res) => {
         res.send(userTodos);        
     } 
     else {
-        res.status(404);
-        res.send({
-            error: "Todos do not exist!"
-        });
+        res.status(200);
+        res.send([]);
     }
-})
+});
 
 // get one todo je userin
 router.get('/:userId/todos/:todoId', async(req, res) => {        
@@ -132,11 +130,7 @@ router.get('/:userId/todos/:todoId', async(req, res) => {
             error: "Todo does not exist!"
         });
     }
-})
-
-
-
-
+});
 
 // update one user // nicht zwingend vollständiges Objekt übergeben, sondern auch nur einzelne Attribute //funktioniert
 router.patch('/:id', async(req, res) => {
