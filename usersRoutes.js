@@ -7,37 +7,40 @@ var jwt = require('jsonwebtoken');
 const Todo = require('./models/todos');
 
 // get all users 
-router.get('/', async(req, res) => {
+router.get('/', async (req, res) => {
     const allUsers = await User.find();
     console.log(allUsers);
     res.send(allUsers);
 });
 
 // post one user - login 
-router.post('/login', async(req, res) => {
+router.post('/login', async (req, res) => {
 
     let email = req.body.email
-    let passwort = req.body.passwort   
+    let passwort = req.body.passwort
 
     let user = await User.findOne({ email: email });
 
-    if (user){
+    if (user) {
         const match = await bcrypt.compare(passwort, user.passwort);
         if (match) {
-            const userWithoutPasswort = { _id : user._id , email : user.email, name : user.name } ;
-            const token = jwt.sign(userWithoutPasswort, email); 
+            const userWithoutPasswort = { _id: user._id, email: user.email, name: user.name };
+            const token = jwt.sign(userWithoutPasswort, email);
             res.status(200)
-            res.send({token : token, user : userWithoutPasswort});            
+            res.send({ token: token, user: userWithoutPasswort });
 
         } else {
             res.status(401).send({ message: "Invalid email/password" });
         }
     }
+    else {
+        res.status(401).send({ message: "Invalid email/password" });
+    }
 
 });
 
 // post one user - register 
-router.post('/register', async(req, res) => {
+router.post('/register', async (req, res) => {
 
     let emailVar = req.body.email
     let passwortVar = req.body.passwort
@@ -48,39 +51,39 @@ router.post('/register', async(req, res) => {
     //prüfe, ob mail schon existiert    
     let user = await User.findOne({ email: emailVar });
 
-    if (user){      // wenn ja, dann Fehler zurückgeben
+    if (user) {      // wenn ja, dann Fehler zurückgeben
 
-        res.status(401).send({ message: "email already exists!" });           
+        res.status(401).send({ message: "email already exists!" });
 
-        } 
-        
-        else {      // wenn nein, dann neuen User anlegen
+    }
 
-            const newUser = new User({
+    else {      // wenn nein, dann neuen User anlegen
 
-                email: emailVar,
-                passwort: hashPasswort,
-                name: nameVar
-            })
+        const newUser = new User({
 
-            await newUser.save();
-            res.status(201).send(newUser);
+            email: emailVar,
+            passwort: hashPasswort,
+            name: nameVar
+        })
+
+        await newUser.save();
+        res.status(201).send(newUser);
     }
 
 });
 
 // get one User via id 
 // :name des Parameters (hat Bedeutung), wird wieder aus request Objekt ausgelesen
-router.get('/:id', async(req, res) => {        
+router.get('/:id', async (req, res) => {
     let id = req.params.id; // id aus der URL holen (Parameter so bennen wie auch tatsächlich gesucht wird)
-    
+
     // find gibt Array 
     //findOne gibt null zurück 
-    let user = await User.findOne({ _id : req.params.id}); // Objekte in der Datenbank suchen, die mit der id übereinstimmen
-   
-    if(user) {
+    let user = await User.findOne({ _id: req.params.id }); // Objekte in der Datenbank suchen, die mit der id übereinstimmen
+
+    if (user) {
         res.send(user);
-    } 
+    }
     else {
         res.status(404);
         res.send({
@@ -90,19 +93,19 @@ router.get('/:id', async(req, res) => {
 });
 
 // get all todos for one user
-router.get('/:id/todos', async(req, res) => {        
+router.get('/:id/todos', async (req, res) => {
     let id = req.params.id; // id aus der URL holen (Parameter so bennen wie auch tatsächlich gesucht wird)
-    
+
     // find gibt Array 
     //findOne gibt null zurück 
 
     //durchsuche todo-Datenbank nach User id
     //zeige alle ToDos an 
-    let userTodos = await Todo.find({ user_id : req.params.id}) ;  // Objekte in der Datenbank suchen, die mit der id übereinstimmen
-   
-    if(userTodos.length > 0) {      // wenn Array befüllt ist, dann alle ToDos zurückgeben
-        res.send(userTodos);        
-    } 
+    let userTodos = await Todo.find({ user_id: req.params.id });  // Objekte in der Datenbank suchen, die mit der id übereinstimmen
+
+    if (userTodos.length > 0) {      // wenn Array befüllt ist, dann alle ToDos zurückgeben
+        res.send(userTodos);
+    }
     else {
         res.status(200);
         res.send([]);
@@ -110,20 +113,20 @@ router.get('/:id/todos', async(req, res) => {
 });
 
 // get one todo je userin
-router.get('/:userId/todos/:todoId', async(req, res) => {        
+router.get('/:userId/todos/:todoId', async (req, res) => {
     let userId = req.params.userId; // id aus der URL holen (Parameter so bennen wie auch tatsächlich gesucht wird)
     let todoId = req.params.todoId; // id aus der URL holen (Parameter so bennen wie auch tatsächlich gesucht wird)
-    
+
     // find gibt Array 
     //findOne gibt null zurück 
 
     //durchsuche todo-Datenbank nach User id
     //zeige alle ToDos an 
-    let userTodo = await Todo.findOne({ user_id : userId, _id: todoId }) ;  // Objekte in der Datenbank suchen, die mit der id übereinstimmen
-   
-    if(userTodo) {      // wenn Array befüllt ist, dann alle ToDos zurückgeben
-        res.send(userTodo);        
-    } 
+    let userTodo = await Todo.findOne({ user_id: userId, _id: todoId });  // Objekte in der Datenbank suchen, die mit der id übereinstimmen
+
+    if (userTodo) {      // wenn Array befüllt ist, dann alle ToDos zurückgeben
+        res.send(userTodo);
+    }
     else {
         res.status(404);
         res.send({
@@ -133,20 +136,20 @@ router.get('/:userId/todos/:todoId', async(req, res) => {
 });
 
 // update one user // nicht zwingend vollständiges Objekt übergeben, sondern auch nur einzelne Attribute //funktioniert
-router.patch('/:id', async(req, res) => {
+router.patch('/:id', async (req, res) => {
     try {
         const user = await User.findOne({ _id: req.params.id })
 
-        if (req.body.email) {       
-           user.email = req.body.email
+        if (req.body.email) {
+            user.email = req.body.email
         }
 
         if (req.body.passwort) {
-            user.passwort = req.body.passwort       
+            user.passwort = req.body.passwort
         }
 
         if (req.body.name) {
-            user.name = req.body.name       
+            user.name = req.body.name
         }
 
         await User.updateOne({ _id: req.params.id }, user);
@@ -158,14 +161,14 @@ router.patch('/:id', async(req, res) => {
 });
 
 // delete one user via id 
-router.delete('/:id', async(req, res) => {
-    
+router.delete('/:id', async (req, res) => {
+
     try {
         await User.deleteOne({ _id: req.params.id })
         res.status(204).send()              // status 204 schickt keine Meldung mit
     } catch {
         res.status(404)
-        res.send({ error: "User does not exist!" })       
+        res.send({ error: "User does not exist!" })
     }
 });
 
