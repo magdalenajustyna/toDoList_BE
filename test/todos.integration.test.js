@@ -7,27 +7,55 @@ const Todo = require('../models/todos');
 
 let mongoServer;
 
-// Läuft einmal vor allen Tests: startet eine echte MongoDB, die nur im
-// Arbeitsspeicher lebt, und verbindet Mongoose damit. Die 30 Sekunden am Ende
-// sind ein erhöhtes Zeitlimit - der Start dauert etwa eine Sekunde, beim
-// allerersten Mal auf einem frischen Rechner aber länger.
+// startet Instanz einer echten MongoDB im RAM
+// erhötes Zeitlimit, damit Jest nicht auf Github Actions zu früh abbricht (Dauer Download der MongoDB-Datei)
 beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
     await mongoose.connect(mongoServer.getUri(), { dbName: 'todolist_test' });
 }, 30000);
 
-// Läuft einmal nach allen Tests. Ohne dieses Aufräumen bleiben Verbindungen
-// offen und der Testprozess beendet sich nicht - in GitHub Actions würde der
-// Job dann bis zum Timeout weiterlaufen.
+// RAM-MongoDB wieder herunterfahren, damit Jest nicht hängen bleibt (Testprozess beenden)
 afterAll(async () => {
     await mongoose.disconnect();
     await mongoServer.stop();
 });
 
-// Läuft vor jedem einzelnen Test: leert die Sammlung, damit die Tests sich
-// nicht gegenseitig beeinflussen und ihre Reihenfolge egal ist.
+// löscht Todos, damit Tests sich nicht beeinflussen
 beforeEach(async () => {
     await Todo.deleteMany({});
+});
+
+test('GET /todos/todo liefert ein leeres Array, wenn nichts gespeichert ist', async () => {
+    const response = await request(app).get('/todos/todo');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([]);
+});
+
+test('GET /todos/todo liefert alle Todos, unabhängig von der user_id', async () => {
+    await Todo.create({
+        status: 'offen',
+        todoName: 'Annas Todo',
+        prio: 'hoch',
+        datum: '2026-09-10',
+        user_id: 'anna'
+    });
+    await Todo.create({
+        status: 'offen',
+        todoName: 'Bens Todo',
+        prio: 'niedrig',
+        datum: '2026-09-11',
+        user_id: 'ben'
+    });
+
+    const response = await request(app).get('/todos/todo');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(2);
+
+    const namen = response.body.map(todo => todo.todoName);
+    expect(namen).toContain('Annas Todo');
+    expect(namen).toContain('Bens Todo');
 });
 
 test('POST /todos/todo legt ein Todo an und speichert es dauerhaft', async () => {
@@ -45,12 +73,42 @@ test('POST /todos/todo legt ein Todo an und speichert es dauerhaft', async () =>
     expect(response.body.todoName).toBe('Einkaufen gehen');
     expect(response.body._id).toBeDefined();
 
-    // Der eigentliche Beweis: Liegt es wirklich in der Datenbank, oder hat die
-    // Route nur zurückgeschickt, was wir ihr geschickt haben?
     const gespeichert = await Todo.findById(response.body._id);
     expect(gespeichert).not.toBeNull();
+    expect(gespeichert.status).toBe('offen');
     expect(gespeichert.todoName).toBe('Einkaufen gehen');
+    expect(gespeichert.prio).toBe('hoch');
+    expect(gespeichert.datum).toBe('2026-09-10');
     expect(gespeichert.user_id).toBe('user-1');
+});
+
+test('GET /todos/todo/:id liefert das angefragte Todo', async () => {
+    const angelegt = await Todo.create({
+        status: 'offen',
+        todoName: 'Blumen gießen',
+        prio: 'mittel',
+        datum: '2026-09-13',
+        user_id: 'user-1'
+    });
+
+    const response = await request(app).get(`/todos/todo/${angelegt._id}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body._id).toBe(angelegt._id.toString());
+    expect(response.body.status).toBe('offen');
+    expect(response.body.todoName).toBe('Blumen gießen');
+    expect(response.body.prio).toBe('mittel');
+    expect(response.body.datum).toBe('2026-09-13');
+    expect(response.body.user_id).toBe('user-1');
+});
+
+test('GET /todos/todo/:id liefert 404 für eine unbekannte ID', async () => {
+    const unbekannteId = new mongoose.Types.ObjectId();
+
+    const response = await request(app).get(`/todos/todo/${unbekannteId}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.error).toBe('Todo does not exist!');
 });
 
 test('PATCH /todos/todo/:id markiert ein Todo als erledigt', async () => {
@@ -70,9 +128,21 @@ test('PATCH /todos/todo/:id markiert ein Todo als erledigt', async () => {
 
     const geaendert = await Todo.findById(angelegt._id);
     expect(geaendert.status).toBe('erledigt');
-    // Die übrigen Felder dürfen dabei nicht verloren gehen:
     expect(geaendert.todoName).toBe('Wäsche waschen');
     expect(geaendert.prio).toBe('mittel');
+    expect(geaendert.datum).toBe('2026-09-11');
+    expect(geaendert.user_id).toBe('user-1');
+});
+
+test('PATCH /todos/todo/:id liefert 404 für eine unbekannte ID', async () => {
+    const unbekannteId = new mongoose.Types.ObjectId();
+
+    const response = await request(app)
+        .patch(`/todos/todo/${unbekannteId}`)
+        .send({ status: 'erledigt' });
+
+    expect(response.status).toBe(404);
+    expect(response.body.error).toBe('Todo does not exist!');
 });
 
 test('DELETE /todos/todo/:id löscht ein Todo', async () => {
