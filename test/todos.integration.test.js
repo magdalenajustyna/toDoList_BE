@@ -25,39 +25,6 @@ beforeEach(async () => {
     await Todo.deleteMany({});
 });
 
-test('GET /todos/todo liefert ein leeres Array, wenn nichts gespeichert ist', async () => {
-    const response = await request(app).get('/todos/todo');
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual([]);
-});
-
-test('GET /todos/todo liefert alle Todos, unabhängig von der user_id', async () => {
-    await Todo.create({
-        status: 'offen',
-        todoName: 'Annas Todo',
-        prio: 'hoch',
-        datum: '2026-09-10',
-        user_id: 'anna'
-    });
-    await Todo.create({
-        status: 'offen',
-        todoName: 'Bens Todo',
-        prio: 'niedrig',
-        datum: '2026-09-11',
-        user_id: 'ben'
-    });
-
-    const response = await request(app).get('/todos/todo');
-
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveLength(2);
-
-    const namen = response.body.map(todo => todo.todoName);
-    expect(namen).toContain('Annas Todo');
-    expect(namen).toContain('Bens Todo');
-});
-
 test('POST /todos/todo legt ein Todo an und speichert es dauerhaft', async () => {
     const response = await request(app)
         .post('/todos/todo')

@@ -13,6 +13,4 @@ app.use(cors({
 app.use('/todos/todo', routes);
 app.use('/todos/user', usersRoutes);
 
-// Nur bauen, nicht starten: Diese Datei öffnet weder einen Port noch eine
-// Datenbankverbindung. Deshalb kann ein Test sie gefahrlos importieren.
 module.exports = app;
