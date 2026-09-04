@@ -20,7 +20,8 @@ router.post('/', async(req, res) => {
             user_id: req.body.user_id
         })
         await newTodo.save();
-        res.send(newTodo);
+        // Rückgabe des 201-Status beim erfolgreichen Anlegen
+        res.status(201).send(newTodo);
     } catch (err) {
         console.log(err);
         res.status(400).send({ error: "Todo could not be created!" });

@@ -32,6 +32,19 @@ db.once('open', () => {
     console.log('connected to DB');
 });
 
+// Start the server only if this module is the entry point
+if (require.main === module) { //if (require.main === module)- stellt sicher, dass app.listen() nur ausgeführt wird, wenn Skript mit Node server.js audgeführt wird und nicht, wenn es durch ein anderes Modul ('require') importiert wird->Port Warnung bei Test
+    app.listen(PORT, '0.0.0.0', (error) => {
+        if (error) {
+            console.log(error);
+        } else {
+            console.log(`Server started and listening on port ${PORT} ...`);
+        }
+    });
+}
+
+/*
+
 app.listen(PORT, '0.0.0.0', (error) => {
     if (error) {
         console.log(error);
@@ -39,5 +52,7 @@ app.listen(PORT, '0.0.0.0', (error) => {
         console.log(`Server started and listening on port ${PORT} ... `);
     }
 });
+*/
+//module.exports = { getPort };
 
-module.exports = { getPort };
+module.exports = app;
