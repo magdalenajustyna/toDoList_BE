@@ -172,7 +172,7 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-//Hilfsmethode, um festgehangenen Tes User zu löschen
+//Hilfsmethode, um Test User zu löschen, bei dem ID unbekannt
 // delete one user via email
 router.delete('/email/:email', async (req, res) => {
     try {
