@@ -307,3 +307,44 @@ describe('PATCH /:id - Update One User', () => {
   });
 });
 
+// ==================== DELETE USER TESTS ====================
+describe('DELETE /:id - Delete One User', () => {
+  let req, res;
+  beforeEach(() => {
+    req = { params: { id: 'user-to-delete-123' } }; 
+    res = { status: jest.fn().mockReturnThis(), send: jest.fn() };
+    jest.clearAllMocks();
+    
+    // Wir stellen sicher, dass deleteOne gemockt ist
+    User.deleteOne = jest.fn();
+  });
+
+  test('Szenario 1: Benutzer erfolgreich loeschen (Status 204)', async () => {
+    // ARRANGEMENT: deleteOne gibt im Erfolgsfall ein Bestätigungsobjekt zurück
+    User.deleteOne.mockResolvedValue({ deletedCount: 1 });
+
+    // ACT: Wir suchen gezielt nach der DELETE-Methode auf dem Pfad '/:id'
+    const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/:id' && layer.route.methods.delete).route.stack[0].handle;
+    await routeHandler(req, res);
+
+    // ASSERT: Prüfen, ob der richtige Status gesendet wurde und deleteOne aufgerufen wurde
+    expect(User.deleteOne).toHaveBeenCalledWith({ _id: 'user-to-delete-123' });
+    expect(res.status).toHaveBeenCalledWith(204);
+    expect(res.send).toHaveBeenCalledTimes(1);
+  });
+
+  test('Szenario 2: Fehler beim Loeschen (404)', async () => {
+    // ARRANGEMENT: Die Datenbank wirft einen Fehler aus (löst den catch-Block aus)
+    User.deleteOne.mockRejectedValue(new Error('Database error'));
+
+    // ACT
+    const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/:id' && layer.route.methods.delete).route.stack[0].handle;
+    await routeHandler(req, res);
+
+    // ASSERT: Status 404 und Fehlermeldung prüfen
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.send).toHaveBeenCalledWith({ error: "User does not exist!" });
+  });
+});
+
+
