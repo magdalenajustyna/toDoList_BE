@@ -1,9 +1,26 @@
 // ==================== IMPORTS & MOCKS ====================
 const router = require('../usersRoutes'); 
 
-// Alle Mocks müssen ganz nach oben
-jest.mock('../models/users', () => ({ find: jest.fn(), findOne: jest.fn() }));
-jest.mock('bcrypt', () => ({ compare: jest.fn() }));
+// Wir erweitern den User-Mock, damit er auch das Erstellen von Instanzen (new User) simuliert
+jest.mock('../models/users', () => {
+  const mockSave = jest.fn();
+  function MockUser(data) {
+    this.email = data.email;
+    this.passwort = data.passwort;
+    this.name = data.name;
+    this.save = mockSave; 
+    return this;
+  }
+  MockUser.find = jest.fn();
+  MockUser.findOne = jest.fn();
+  MockUser.prototype.save = mockSave; 
+  return MockUser;
+});
+
+jest.mock('bcrypt', () => ({ 
+  compare: jest.fn(),
+  hash: jest.fn() 
+}));
 jest.mock('jsonwebtoken', () => ({ sign: jest.fn() }));
 
 const User = require('../models/users'); 
@@ -13,13 +30,13 @@ const jwt = require('jsonwebtoken');
 // ==================== GET-TESTS ====================
 describe('GET / - Get All Users', () => {
   test('sollte alle Benutzer erfolgreich zurückgeben', async () => {
-    const mockUsers = [{ id: 1, name: 'Anna' }, { id: 2, name: 'Ben' },
-        { id: 3, name: 'Gülcan' }, { id: 4, name: 'Tupoka' }, { id: 5, name: 'Ugur' }];
+    const mockUsers = [{ id: 1, name: 'Anna' }, { id: 2, name: 'Ben' }];
     User.find.mockResolvedValue(mockUsers); 
 
     const req = {};
     const res = { send: jest.fn() };
 
+    // Hier mit [0] korrigiert!
     const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/').route.stack[0].handle;
     await routeHandler(req, res);
 
@@ -28,17 +45,13 @@ describe('GET / - Get All Users', () => {
   });
 });
 
-// ==================== POST-TESTS ====================
+// ==================== POST-LOGIN TEST ====================
 describe('POST /login', () => {
   let req, res;
-
   beforeEach(() => {
     req = { body: { email: 'test@uni.de', passwort: 'geheim123' } };
-    res = {
-      status: jest.fn().mockReturnThis(), // .mockReturnThis() erlaubt res.status().send()
-      send: jest.fn()
-    };
-    jest.clearAllMocks(); // Setzt alle Spione für jeden Test zurück
+    res = { status: jest.fn().mockReturnThis(), send: jest.fn() };
+    jest.clearAllMocks();
   });
 
   test('Szenario 1: erfolgreicher Login', async () => {
@@ -47,6 +60,7 @@ describe('POST /login', () => {
     bcrypt.compare.mockResolvedValue(true);
     jwt.sign.mockReturnValue('fake-token-123');
 
+    // Hier mit [0] korrigiert!
     const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/login').route.stack[0].handle;
     await routeHandler(req, res);
 
@@ -62,6 +76,7 @@ describe('POST /login', () => {
     User.findOne.mockResolvedValue(mockUser);
     bcrypt.compare.mockResolvedValue(false);
 
+    // Hier mit [0] korrigiert!
     const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/login').route.stack[0].handle;
     await routeHandler(req, res);
 
@@ -72,10 +87,49 @@ describe('POST /login', () => {
   test('Szenario 3: E-Mail nicht gefunden', async () => {
     User.findOne.mockResolvedValue(null);
 
+    // Hier mit [0] korrigiert!
     const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/login').route.stack[0].handle;
     await routeHandler(req, res);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.send).toHaveBeenCalledWith({ message: "Invalid email/password" });
+  });
+});
+
+// ==================== POST-REGISTER TESTS ====================
+describe('POST /register', () => {
+  let req, res;
+  beforeEach(() => {
+    req = { body: { email: 'neu@uni.de', passwort: 'sicherespw', name: 'Zoe' } };
+    res = { status: jest.fn().mockReturnThis(), send: jest.fn() };
+    jest.clearAllMocks();
+  });
+
+  test('Szenario 1: erfolgreiche Registrierung', async () => {
+    bcrypt.hash.mockResolvedValue('fake-hash-999');
+    User.findOne.mockResolvedValue(null);
+
+    // Hier mit [0] korrigiert!
+    const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/register').route.stack[0].handle;
+    await routeHandler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.send).toHaveBeenCalledWith(expect.objectContaining({
+      email: 'neu@uni.de',
+      name: 'Zoe',
+      passwort: 'fake-hash-999'
+    }));
+  });
+
+  test('Szenario 2: E-Mail existiert bereits', async () => {
+    bcrypt.hash.mockResolvedValue('fake-hash-999');
+    User.findOne.mockResolvedValue({ email: 'neu@uni.de' });
+
+    // Hier mit [0] korrigiert!
+    const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/register').route.stack[0].handle;
+    await routeHandler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.send).toHaveBeenCalledWith({ message: "email already exists!" });
   });
 });
