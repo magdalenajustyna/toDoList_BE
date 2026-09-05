@@ -17,6 +17,11 @@ jest.mock('../models/users', () => {
   return MockUser;
 });
 
+// Mock für das Todo-Model
+jest.mock('../models/todos', () => ({
+  find: jest.fn()
+}));
+
 jest.mock('bcrypt', () => ({ 
   compare: jest.fn(),
   hash: jest.fn() 
@@ -24,19 +29,26 @@ jest.mock('bcrypt', () => ({
 jest.mock('jsonwebtoken', () => ({ sign: jest.fn() }));
 
 const User = require('../models/users'); 
+const Todo = require('../models/todos'); 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 // ==================== GET-TESTS ====================
 describe('GET / - Get All Users', () => {
   test('sollte alle Benutzer erfolgreich zurückgeben', async () => {
-    const mockUsers = [{ id: 1, name: 'Anna' }, { id: 2, name: 'Ben' }];
+    // Hier sind deine 5 Wunschnamen jetzt fest verankert!
+    const mockUsers = [
+      { id: 1, name: 'Anna' }, 
+      { id: 2, name: 'Ben' },
+      { id: 3, name: 'Gülcan' }, 
+      { id: 4, name: 'Tupoka' }, 
+      { id: 5, name: 'Ugur' }
+    ];
     User.find.mockResolvedValue(mockUsers); 
 
     const req = {};
     const res = { send: jest.fn() };
 
-    // Hier mit [0] korrigiert!
     const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/').route.stack[0].handle;
     await routeHandler(req, res);
 
@@ -60,7 +72,6 @@ describe('POST /login', () => {
     bcrypt.compare.mockResolvedValue(true);
     jwt.sign.mockReturnValue('fake-token-123');
 
-    // Hier mit [0] korrigiert!
     const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/login').route.stack[0].handle;
     await routeHandler(req, res);
 
@@ -76,7 +87,6 @@ describe('POST /login', () => {
     User.findOne.mockResolvedValue(mockUser);
     bcrypt.compare.mockResolvedValue(false);
 
-    // Hier mit [0] korrigiert!
     const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/login').route.stack[0].handle;
     await routeHandler(req, res);
 
@@ -87,7 +97,6 @@ describe('POST /login', () => {
   test('Szenario 3: E-Mail nicht gefunden', async () => {
     User.findOne.mockResolvedValue(null);
 
-    // Hier mit [0] korrigiert!
     const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/login').route.stack[0].handle;
     await routeHandler(req, res);
 
@@ -109,7 +118,6 @@ describe('POST /register', () => {
     bcrypt.hash.mockResolvedValue('fake-hash-999');
     User.findOne.mockResolvedValue(null);
 
-    // Hier mit [0] korrigiert!
     const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/register').route.stack[0].handle;
     await routeHandler(req, res);
 
@@ -125,7 +133,6 @@ describe('POST /register', () => {
     bcrypt.hash.mockResolvedValue('fake-hash-999');
     User.findOne.mockResolvedValue({ email: 'neu@uni.de' });
 
-    // Hier mit [0] korrigiert!
     const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/register').route.stack[0].handle;
     await routeHandler(req, res);
 
@@ -138,37 +145,67 @@ describe('POST /register', () => {
 describe('GET /:id - Get One User via ID', () => {
   let req, res;
   beforeEach(() => {
-    // Wir simulieren req.params.id statt req.body
     req = { params: { id: 'user-abc-123' } }; 
     res = { status: jest.fn().mockReturnThis(), send: jest.fn() };
     jest.clearAllMocks();
   });
 
   test('Szenario 1: Benutzer existiert', async () => {
-    // ARRANGEMENT: Wir gaukeln vor, dass der User in der Datenbank existiert
     const mockUser = { _id: 'user-abc-123', email: 'id-test@uni.de', name: 'Tom' };
     User.findOne.mockResolvedValue(mockUser);
 
-    // ACT: Wir holen uns den Handler für den Pfad '/:id'
     const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/:id').route.stack[0].handle;
     await routeHandler(req, res);
 
-    // ASSERT: Wurde der User mit Erfolg zurückgegeben?
     expect(res.send).toHaveBeenCalledWith(mockUser);
   });
 
   test('Szenario 2: Benutzer existiert NICHT (404)', async () => {
-    // ARRANGEMENT: findOne gibt null zurück, wenn nichts gefunden wird
     User.findOne.mockResolvedValue(null);
 
-    // ACT
     const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/:id').route.stack[0].handle;
     await routeHandler(req, res);
 
-    // ASSERT: Prüfen, ob Status 404 und die Fehlermeldung gesendet wurden
     expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.send).toHaveBeenCalledWith({
-      error: "User does not exist!"
-    });
+    expect(res.send).toHaveBeenCalledWith({ error: "User does not exist!" });
+  });
+});
+
+// ==================== GET TODOS FOR ONE USER TESTS ====================
+describe('GET /:id/todos - Get All Todos for One User', () => {
+  let req, res;
+  beforeEach(() => {
+    req = { params: { id: 'user-abc-123' } }; 
+    res = { status: jest.fn().mockReturnThis(), send: jest.fn() };
+    jest.clearAllMocks();
+  });
+
+  test('Szenario 1: Benutzer hat Todos (Gülcan, Tupoka etc.)', async () => {
+    // Auch hier nutzen wir deine feste Namensliste als Zuordnung für die Todos!
+    const mockTodos = [
+      { id: 101, todoName: 'DevOps lernen', user_id: 'user-abc-123', name: 'Anna' },
+      { id: 102, todoName: 'Unit-Tests schreiben', user_id: 'user-abc-123', name: 'Ben' },
+      { id: 103, todoName: 'Git-Konflikte loesen', user_id: 'user-abc-123', name: 'Gülcan' },
+      { id: 104, todoName: 'Frontend anbinden', user_id: 'user-abc-123', name: 'Tupoka' },
+      { id: 105, todoName: 'Projekt abgeben', user_id: 'user-abc-123', name: 'Ugur' }
+    ];
+    Todo.find.mockResolvedValue(mockTodos); 
+
+    // Hier mit dem korrigierten [0]-Array Zugriff!
+    const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/:id/todos').route.stack[0].handle;
+    await routeHandler(req, res);
+
+    expect(res.send).toHaveBeenCalledWith(mockTodos);
+  });
+
+  test('Szenario 2: Benutzer hat noch keine Todos (leeres Array)', async () => {
+    Todo.find.mockResolvedValue([]); 
+
+    // Hier mit dem korrigierten [0]-Array Zugriff!
+    const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/:id/todos').route.stack[0].handle;
+    await routeHandler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.send).toHaveBeenCalledWith([]);
   });
 });
