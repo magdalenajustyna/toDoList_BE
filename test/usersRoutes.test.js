@@ -133,3 +133,42 @@ describe('POST /register', () => {
     expect(res.send).toHaveBeenCalledWith({ message: "email already exists!" });
   });
 });
+
+// ==================== GET BY ID TESTS ====================
+describe('GET /:id - Get One User via ID', () => {
+  let req, res;
+  beforeEach(() => {
+    // Wir simulieren req.params.id statt req.body
+    req = { params: { id: 'user-abc-123' } }; 
+    res = { status: jest.fn().mockReturnThis(), send: jest.fn() };
+    jest.clearAllMocks();
+  });
+
+  test('Szenario 1: Benutzer existiert', async () => {
+    // ARRANGEMENT: Wir gaukeln vor, dass der User in der Datenbank existiert
+    const mockUser = { _id: 'user-abc-123', email: 'id-test@uni.de', name: 'Tom' };
+    User.findOne.mockResolvedValue(mockUser);
+
+    // ACT: Wir holen uns den Handler für den Pfad '/:id'
+    const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/:id').route.stack[0].handle;
+    await routeHandler(req, res);
+
+    // ASSERT: Wurde der User mit Erfolg zurückgegeben?
+    expect(res.send).toHaveBeenCalledWith(mockUser);
+  });
+
+  test('Szenario 2: Benutzer existiert NICHT (404)', async () => {
+    // ARRANGEMENT: findOne gibt null zurück, wenn nichts gefunden wird
+    User.findOne.mockResolvedValue(null);
+
+    // ACT
+    const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/:id').route.stack[0].handle;
+    await routeHandler(req, res);
+
+    // ASSERT: Prüfen, ob Status 404 und die Fehlermeldung gesendet wurden
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.send).toHaveBeenCalledWith({
+      error: "User does not exist!"
+    });
+  });
+});
