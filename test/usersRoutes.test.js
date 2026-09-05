@@ -255,3 +255,55 @@ describe('GET /:userId/todos/:todoId - Get One Specific Todo', () => {
     });
   });
 });
+
+// ==================== PATCH UPDATE USER TESTS ====================
+describe('PATCH /:id - Update One User', () => {
+  let req, res;
+  beforeEach(() => {
+    req = { 
+      params: { id: 'user-ugur-999' },
+      body: { name: 'Ugur-Neu' } // Wir aktualisieren nur den Namen
+    }; 
+    res = { status: jest.fn().mockReturnThis(), send: jest.fn() };
+    jest.clearAllMocks();
+    
+    // Falls updateOne noch nicht gemockt ist, hängen wir es hier sicherheitshalber an
+    User.updateOne = jest.fn();
+  });
+
+  test('Szenario 1: Benutzer erfolgreich aktualisieren (z.B. Ugur)', async () => {
+    // ARRANGEMENT: Wir simulieren den bestehenden User vor dem Update
+    const mockUser = { 
+      _id: 'user-ugur-999', 
+      email: 'ugur@uni.de', 
+      name: 'Ugur', 
+      passwort: 'pw123' 
+    };
+    User.findOne.mockResolvedValue(mockUser);
+    User.updateOne.mockResolvedValue({ acknowledged: true }); // Simuliert erfolgreiches Speichern
+
+    // ACT: Wir holen uns den Handler für den Pfad '/:id' unter Berücksichtigung, dass es eine PATCH-Methode ist
+    // Express speichert PATCH-Routen genauso wie GET im stack
+    const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/:id' && layer.route.methods.patch).route.stack[0].handle;
+    await routeHandler(req, res);
+
+    // ASSERT: Prüfen, ob der geänderte Name im zurückgegebenen Objekt drin ist
+    expect(mockUser.name).toBe('Ugur-Neu');
+    expect(User.updateOne).toHaveBeenCalledWith({ _id: 'user-ugur-999' }, mockUser);
+    expect(res.send).toHaveBeenCalledWith(mockUser);
+  });
+
+  test('Szenario 2: Benutzer existiert nicht oder Fehler beim Update (404)', async () => {
+    // ARRANGEMENT: findOne wirft einen Fehler aus (simuliert die catch-Bedingung)
+    User.findOne.mockRejectedValue(new Error('Database error'));
+
+    // ACT
+    const routeHandler = router.stack.find(layer => layer.route && layer.route.path === '/:id' && layer.route.methods.patch).route.stack[0].handle;
+    await routeHandler(req, res);
+
+    // ASSERT: Status 404 und Fehlermeldung im Catch-Block prüfen
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.send).toHaveBeenCalledWith({ error: "User does not exist!" });
+  });
+});
+
