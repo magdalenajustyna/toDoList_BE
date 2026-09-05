@@ -19,7 +19,8 @@ jest.mock('../models/users', () => {
 
 // Mock für das Todo-Model
 jest.mock('../models/todos', () => ({
-  find: jest.fn()
+  find: jest.fn(),
+  findOne: jest.fn() // <-- Das hat gefehlt!
 }));
 
 jest.mock('bcrypt', () => ({ 
@@ -207,5 +208,50 @@ describe('GET /:id/todos - Get All Todos for One User', () => {
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.send).toHaveBeenCalledWith([]);
+  });
+});
+
+
+// ==================== GET SPECIFIC TODO FOR USER TESTS ====================
+describe('GET /:userId/todos/:todoId - Get One Specific Todo', () => {
+  let req, res;
+  beforeEach(() => {
+    // Wir simulieren beide URL-Parameter
+    req = { params: { userId: 'user-abc-123', todoId: 'todo-999' } }; 
+    res = { status: jest.fn().mockReturnThis(), send: jest.fn() };
+    jest.clearAllMocks();
+  });
+
+  test('Szenario 1: Spezifisches Todo existiert (z.B. für Gülcan)', async () => {
+    // ARRANGEMENT: Wir bauen ein passendes Todo für Gülcan
+    const mockTodo = { 
+      id: 'todo-999', 
+      todoName: 'Git-Konflikte loesen', 
+      user_id: 'user-abc-123', 
+      name: 'Gülcan' 
+    };
+    Todo.findOne.mockResolvedValue(mockTodo); // Simuliert den Treffer in der DB
+
+    // ACT: Pfadabgleich für '/:userId/todos/:todoId'
+    const routeHandler = router.stack.find(layer => layer.route && layer.route.path?.includes('todos/:todoId')).route.stack[0].handle;
+    await routeHandler(req, res);
+
+    // ASSERT: Todo muss erfolgreich gesendet worden sein
+    expect(res.send).toHaveBeenCalledWith(mockTodo);
+  });
+
+  test('Szenario 2: Todo existiert nicht für diesen User (404)', async () => {
+    // ARRANGEMENT: Datenbank findet unter dieser Kombination nichts
+    Todo.findOne.mockResolvedValue(null);
+
+    // ACT
+    const routeHandler = router.stack.find(layer => layer.route && layer.route.path?.includes('todos/:todoId')).route.stack[0].handle;
+    await routeHandler(req, res);
+
+    // ASSERT: Status 404 und Fehlermeldung prüfen
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.send).toHaveBeenCalledWith({
+      error: "Todo does not exist!"
+    });
   });
 });
