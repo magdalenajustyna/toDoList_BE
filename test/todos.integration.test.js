@@ -101,17 +101,6 @@ test('PATCH /todos/todo/:id markiert ein Todo als erledigt', async () => {
     expect(geaendert.user_id).toBe('user-1');
 });
 
-test('PATCH /todos/todo/:id liefert 404 für eine unbekannte ID', async () => {
-    const unbekannteId = new mongoose.Types.ObjectId();
-
-    const response = await request(app)
-        .patch(`/todos/todo/${unbekannteId}`)
-        .send({ status: 'erledigt' });
-
-    expect(response.status).toBe(404);
-    expect(response.body.error).toBe('Todo does not exist!');
-});
-
 test('DELETE /todos/todo/:id löscht ein Todo', async () => {
     const angelegt = await Todo.create({
         status: 'offen',

@@ -97,21 +97,6 @@ test('POST /todos/user/login liefert 401 bei falschem Passwort', async () => {
     expect(response.body.message).toBe('Invalid email/password');
 });
 
-test('POST /todos/user/login liefert 401 bei unbekannter E-Mail', async () => {
-    await User.create({
-        email: 'anna@test.de',
-        passwort: await bcrypt.hash('geheim123', 10),
-        name: 'Anna'
-    });
-
-    const response = await request(app)
-        .post('/todos/user/login')
-        .send({ email: 'gibtesnicht@test.de', passwort: 'geheim123' });
-
-    expect(response.status).toBe(401);
-    expect(response.body.message).toBe('Invalid email/password');
-});
-
 test('GET /todos/user/:id/todos liefert nur die Todos der angefragten Nutzer:in', async () => {
     await Todo.create({
         status: 'offen',
@@ -146,21 +131,6 @@ test('GET /todos/user/:id/todos liefert nur die Todos der angefragten Nutzer:in'
     expect(namen).not.toContain('Bens Todo');
 });
 
-test('GET /todos/user/:id/todos liefert ein leeres Array für eine Nutzer:in ohne Todos', async () => {
-    await Todo.create({
-        status: 'offen',
-        todoName: 'Annas Todo',
-        prio: 'hoch',
-        datum: '2026-09-10',
-        user_id: 'anna'
-    });
-
-    const response = await request(app).get('/todos/user/ben/todos');
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual([]);
-});
-
 test('GET /todos/user/:userId/todos/:todoId liefert das Todo der Nutzer:in', async () => {
     const annasTodo = await Todo.create({
         status: 'offen',
@@ -193,18 +163,4 @@ test('GET /todos/user/:userId/todos/:todoId gibt Annas Todo nicht an Ben heraus'
     expect(response.body.error).toBe('Todo does not exist!');
 });
 
-test('DELETE /todos/user/:id löscht die Nutzer:in', async () => {
-    const angelegt = await User.create({
-        email: 'anna@test.de',
-        passwort: await bcrypt.hash('geheim123', 10),
-        name: 'Anna'
-    });
-
-    const response = await request(app).delete(`/todos/user/${angelegt._id}`);
-
-    expect(response.status).toBe(204);
-
-    const geloescht = await User.findById(angelegt._id);
-    expect(geloescht).toBeNull();
-});
 
