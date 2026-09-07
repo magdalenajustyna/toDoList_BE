@@ -1,85 +1,81 @@
 // tests/userRegistrationAndFirstTodo.test.js
 const request = require('supertest');
 const mongoose = require('mongoose');
-const app = require('../server'); // Importiert das Express-App-Objekt, wie es ist
-// Workaround Server-Start wird im Test simuliert
-let server;
-let userId = ''; // ID des erstellten Benutzers
+const app = require('../app'); // Importiert das Express-App-Objekt, wie es ist
+require('dotenv').config();
 
+const testEmail = 'testuser4@example.com';
+let todoId = '';
+let userId = ''; // ID des erstellten Benutzers
+let token = '';
 
   // Bereinigung: Testbenutzer in der bestehenden Datenbankverbindung entfernen
  // Entferne Testbenutzer vor Beginn der Tests
  beforeAll(async () => {
-  server = app.listen(4000, () => {
-    console.log('Test server running on port 4000');
-  });
+  await mongoose.connect(process.env.DB_CONNECTION); // Verbindung zur DB herstellen
 
   // Entferne Testbenutzer vor Beginn der Tests
-  try {
-    const testEmail = 'testuser4@example.com';
-    const res = await request(app)
-      .delete(`/users/email/${testEmail}`);
-    
-    if (res.statusCode === 204) {
-      console.log(`Deleted test user with email: ${testEmail}`);
-    } else {
-      console.log(`No test user to delete or error occurred for email: ${testEmail}`);
-    }
-  } catch (err) {
-    console.error('Error during test user deletion:', err);
-  }
+  // Vorherige Testdaten entfernen
+  await mongoose.connection.collection('users').deleteOne({
+    email: testEmail
+  });
+
+  console.log(`Existing test user removed if present: ${testEmail}`);
 });
+
 
 
 //nach Test Server wieder herunterfahren
 afterAll(async() => {
-  // Server schließen
-  if (server) {
-   // server.close();
-   await new Promise((resolve) => server.close(resolve));
-      console.log('Test server closed');
-      //done(); // Verwende den Callback, um sicherzustellen, dass Jest das Schließen erkennt.
-    }
-  
+ // Test-To-do entfernen
+  if (todoId) {
+    try {
+      await mongoose.connection.collection('todos').deleteOne({
+        _id: new mongoose.Types.ObjectId(todoId)
+      });
 
-  // Cleanup: Test-User aus der Datenbank entfernen
-  // um ein neues ObjectID -Object zu erstellen benötigen wir schlüsselwort new
-  if (userId) {
-    try{
-      await
-    mongoose.connection.collection('users').deleteOne({ _id: new mongoose.Types.ObjectId(userId) });
-      console.log('Test user removed');
-   
-    //.finally(() => mongoose.connection.close());
-    }catch(err) {
-        console.error('Error removing test user:', err);
-      }
+      console.log('Test todo removed');
+    } catch (err) {
+      console.error('Error removing test todo:', err);
     }
-    // Schließe die Mongoose-Verbindung ordentlich ab
-  try {
+  }
+
+  // Testbenutzer entfernen
+  if (userId) {
+    try {
+      await mongoose.connection.collection('users').deleteOne({
+        _id: new mongoose.Types.ObjectId(userId)
+      });
+
+      console.log('Test user removed');
+    } catch (err) {
+      console.error('Error removing test user:', err);
+    }
+  }
+
+  // Datenbankverbindung schließen
+  if (mongoose.connection.readyState !== 0) {
     await mongoose.connection.close();
     console.log('Mongoose connection closed');
-  } catch (err) {
-    console.error('Error closing Mongoose connection:', err);
   }
 });
 
 
 describe('User Registration and First Todo Scenario', () => {
-  let token = '';  // Speichern des JWT-Tokens
-  //let userId = ''; // ID des erstellten Benutzers
-
   // Registrierung eines neuen Benutzers
   it('should register a new user', async () => {
     const res = await request(app)
       .post('/todos/user/register')
       .send({
-        email: 'testuser4@example.com',
+        email: testEmail,
         passwort: 'yourpassword',
         name: 'Test User4'
       });
     
-    expect(res.statusCode).toEqual(201);
+    console.log('Registration status:', res.statusCode);
+    console.log('Registration body:', res.body);
+
+    expect(res.statusCode).toBe(201);
     expect(res.body).toHaveProperty('_id');  // Die ID des neu erstellten Benutzers
     userId = res.body._id;  // Speichere die Benutzer-ID
   });
@@ -89,11 +85,11 @@ describe('User Registration and First Todo Scenario', () => {
     const res = await request(app)
       .post('/todos/user/login')
       .send({
-        email: 'testuser4@example.com',
+        email: testEmail,
         passwort: 'yourpassword'
       });
     
-    expect(res.statusCode).toEqual(200);
+    expect(res.statusCode).toBe(200);
     expect(res.body).toHaveProperty('token');
     token = res.body.token;  // JWT-Token sichern für nachfolgende Anfragen
   });
@@ -110,10 +106,13 @@ describe('User Registration and First Todo Scenario', () => {
         datum: '2026-10-11',
         user_id: userId
       });
+    console.log('Create todo status:', res.statusCode);
+    console.log('Create todo body:', res.body);
     
-    expect(res.statusCode).toEqual(201);
+    expect(res.statusCode).toBe(201);
     expect(res.body).toHaveProperty('_id');
     expect(res.body.todoName).toBe('Write E2E Test');
+   todoId = res.body._id;
   });
 
   /*

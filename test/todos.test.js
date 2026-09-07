@@ -1,6 +1,3 @@
-/*
-const test = require('node:test');
-const assert = require('node:assert/strict');
 const Todo = require('../models/todos');
 
 
@@ -13,18 +10,9 @@ test('erstellt ein Todo mit den erwarteten Werten', () => {
         user_id: 'user-1'
     });
 
-    assert.equal(todo.status, 'offen');
-    assert.equal(todo.todoName, 'Testaufgabe');
-    assert.equal(todo.prio, 'hoch');
-    assert.equal(todo.datum, '2026-08-28');
-    assert.equal(todo.user_id, 'user-1');
-});
-*/
-// dummy tests/todos.test.js
-
-describe('Dummy Todo Test', () => {
-  test('should pass without doing anything', () => {
-    // Dummy Assertion
-    expect(true).toBe(true);
-  });
+    expect(todo.status).toBe('offen');
+    expect(todo.todoName).toBe('Testaufgabe');
+    expect(todo.prio).toBe('hoch');
+    expect(todo.datum).toBe('2026-08-28');
+    expect(todo.user_id).toBe('user-1');
 });

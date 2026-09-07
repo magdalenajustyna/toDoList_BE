@@ -46,7 +46,6 @@ router.post('/register', async (req, res) => {
     let passwortVar = req.body.passwort
     let nameVar = req.body.name
     let hashPasswort = await bcrypt.hash(passwortVar, 10);
-    console.log('hash : ', hashPasswort)
 
     //prüfe, ob mail schon existiert    
     let user = await User.findOne({ email: emailVar });

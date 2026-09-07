@@ -1,21 +1,18 @@
 // tests/todoManagement.test.js
 const request = require('supertest');
 const mongoose = require('mongoose');
-const app = require('../server');
+const app = require('../app');
+require('dotenv').config();
 
-let server;
 let userId = ''; 
 let todoId = ''; 
 let token = ''; 
 
 beforeAll(async () => {
-    // HTTP_Server wird auf Port 4000 gestartet,um Test auszuführen
-  server = app.listen(4000, () => {
-    console.log('Test server running on port 4000');
-  });
+await mongoose.connect(process.env.DB_CONNECTION); // Verbindung zur DB herstellen
 
   // Registrierung des Benutzers
-  try {
+
     const registrationRes = await request(app)
       .post('/todos/user/register')
       .send({
@@ -24,31 +21,26 @@ beforeAll(async () => {
         name: 'Test User'
       });
 
-    expect(registrationRes.statusCode).toEqual(201);
+      console.log('Registration status:', registrationRes.statusCode);
+  console.log('Registration body:', registrationRes.body);
+
+
+    expect(registrationRes.statusCode).toBe(201);
     expect(registrationRes.body).toHaveProperty('_id');
     userId = registrationRes.body._id;
-  } catch (err) {
-    console.error('Error during test user registration:', err);
-  }
+ 
 });
 
 afterAll(async() => {
-    // Server after all schließen
-  if (server) {
-    await new Promise((resolve) => server.close(resolve));
-    console.log('Test server closed');
-  }
+
   // Sicherstellen, dass das To-Do entfernt wurde
   if (todoId) {
     try {
-      const todo = await mongoose.connection.collection('todos').findOne({ _id: new mongoose.Types.ObjectId(todoId) });
-      if (!todo) {
-        console.log('Test todo successfully removed');
-      } else {
-        console.error('Test todo was not removed');
-      }
+      await mongoose.connection.collection('todos').deleteOne({
+        _id: new mongoose.Types.ObjectId(todoId)
+      });
     } catch (err) {
-      console.error('Error verifying test todo removal:', err);
+      console.error('Error removing test todo:', err);
     }
   }
 // Test User löschen

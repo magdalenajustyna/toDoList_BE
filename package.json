@@ -15,8 +15,7 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "node-test": "node --test"
+    "test": "jest"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -28,6 +27,7 @@
   },
   "devDependencies": {
     "jest": "^30.5.1",
+    "mongodb-memory-server": "^11.2.0",
     "supertest": "^7.2.2"
   }
 }
