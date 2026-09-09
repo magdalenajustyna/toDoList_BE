@@ -171,4 +171,20 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+//Hilfsmethode, um Test User zu löschen, bei dem ID unbekannt
+// delete one user via email
+router.delete('/email/:email', async (req, res) => {
+    try {
+        const result = await User.deleteOne({ email: req.params.email });
+        if (result.deletedCount > 0) {
+            res.status(204).send(); // Erfolgreiches Löschen, keine Rückmeldung notwendig
+            console.log('User deleted:', req.params.email);
+        } else {
+            res.status(404).send({ error: "User does not exist!" });
+        }
+    } catch (err) {
+        console.error('Error deleting user:', err);
+        res.status(500).send({ error: "Internal Server Error" });
+    }
+});
 module.exports = router;
