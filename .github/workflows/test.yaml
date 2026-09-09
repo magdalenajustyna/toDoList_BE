@@ -29,7 +29,7 @@ jobs:
         run: npm ci
 
       - name: Unit Tests ausführen
-        run: npx jest test/todos.test.js
+        run: npx jest test/usersRoutes.test.js 
 
   integration-tests:
     name: Integration Tests
