@@ -36,7 +36,7 @@ test('POST /todos/todo legt ein Todo an und speichert es dauerhaft', async () =>
             user_id: 'user-1'
         });
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
     expect(response.body.todoName).toBe('Einkaufen gehen');
     expect(response.body._id).toBeDefined();
 
