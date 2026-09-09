@@ -13,6 +13,7 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Repository auschecken
@@ -33,6 +34,7 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Repository auschecken
@@ -48,22 +50,32 @@ jobs:
         run: npm ci
 
       - name: Integration Tests ausführen
-        run: npx jest test/todos.integration.test.js --runInBand --detectOpenHandles
+        run: >
+          npx jest
+          test/todos.integration.test.js
+          test/users.integration.test.js
+          --runInBand
 
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [unit-tests, integration-tests]
 
     services:
       mongodb:
         image: mongo:7
         ports:
           - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ping:1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     env:
       DB_CONNECTION: mongodb://127.0.0.1:27017/todolist_ci
     
-
     steps:
       - name: Repository auschecken
         uses: actions/checkout@v4
@@ -83,4 +95,3 @@ jobs:
           test/user-registration.e2e.test.js
           test/todo-management.e2e.test.js
           --runInBand
-          --detectOpenHandles
