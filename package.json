@@ -15,7 +15,7 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest "
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
