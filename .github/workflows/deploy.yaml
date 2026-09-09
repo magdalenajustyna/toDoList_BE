@@ -1,10 +1,9 @@
 name: Deploy Backend to Cloud Run
 
 on:
-  push:
+  pull_request:
     branches:
-      - test/github_actions
-
+      - main
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_REGION: europe-west10
