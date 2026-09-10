@@ -1,9 +1,12 @@
 name: Deploy Backend to Cloud Run
 
 on:
-  pull_request:
+  workflow_run: # starts deploy workflow after completion of the test workflow
+    workflows: ["Tests"] 
+    types:
+      - completed
     branches:
-      - main
+      - main # starts workflow on branch main only 
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_REGION: europe-west10
@@ -14,6 +17,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    # deploy workflow should only start after successful completion of test workflow
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
     permissions: # Rechte des Github Actions Job im Github Umfeld 
       contents: read
       id-token: write
@@ -21,6 +27,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # ref ensures that the deploy workflow checks out the same commit as the test workflow
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -36,7 +45,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          IMAGE_TAG="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/backend:${{ github.sha }}"
+          IMAGE_TAG="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/backend:${{ github.event.workflow_run.head_sha }}"
           docker build -t "$IMAGE_TAG" .
           echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_ENV"
 
