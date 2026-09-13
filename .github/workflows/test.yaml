@@ -1,13 +1,12 @@
 name: Tests
 
 on:
-  push:
-    branches:
-      - main
-      - test_workflow
   pull_request:
     branches:
-      - main
+      - main    # PRs against main trigger tests 
+  push:
+    branches:
+      - main    # after successful merge (= push), run tests again
 
 jobs:
   unit-tests:
